@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/avatar.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/avatar.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"rongrongbq.moe","root":"/","images":"/images","scheme":"Pisces","version":"8.6.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":false,"lazyload":true,"nav":null,"activeClass":"gitalk"},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+<meta name="description" content="背景原本想购入一块 Raspberry Pi，奈何价格长期虚高，就在某天从女票票手里顺走了一块 PINE H64 Model B。往一张 TF 卡里灌入 Armbian 的镜像，就可以愉快地玩耍了。 Armbian 衍生自 Debian。对于 Debian 系，当你需要管理软件包时，通常会使用 apt 来完成。而要搜索软件包，则有 apt search 和 apt-cache search 两种方">
+<meta property="og:type" content="article">
+<meta property="og:title" content="解决在 Armbian 中执行 apt search 非常慢的问题">
+<meta property="og:url" content="https://rongrongbq.moe/2021/07/How-to-solve-slowly-apt-search-on-Armbian/index.html">
+<meta property="og:site_name" content="绒布地球">
+<meta property="og:description" content="背景原本想购入一块 Raspberry Pi，奈何价格长期虚高，就在某天从女票票手里顺走了一块 PINE H64 Model B。往一张 TF 卡里灌入 Armbian 的镜像，就可以愉快地玩耍了。 Armbian 衍生自 Debian。对于 Debian 系，当你需要管理软件包时，通常会使用 apt 来完成。而要搜索软件包，则有 apt search 和 apt-cache search 两种方">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-07-04T19:15:32.000Z">
+<meta property="article:modified_time" content="2021-07-04T19:15:32.000Z">
+<meta property="article:author" content="Rongrong">
+<meta property="article:tag" content="笔记">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://rongrongbq.moe/2021/07/How-to-solve-slowly-apt-search-on-Armbian/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://rongrongbq.moe/2021/07/How-to-solve-slowly-apt-search-on-Armbian/","path":"2021/07/How-to-solve-slowly-apt-search-on-Armbian/","title":"解决在 Armbian 中执行 apt search 非常慢的问题"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>解决在 Armbian 中执行 apt search 非常慢的问题 | 绒布地球</title>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">绒布地球</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li>
+        <li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+        <li class="menu-item menu-item-友链"><a href="/friends/" rel="section"><i class="fa fa-link fa-fw"></i>友链</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">3.</span> <span class="nav-text">后记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8A%E6%B8%B8%E9%97%AE%E9%A2%98"><span class="nav-number">3.1.</span> <span class="nav-text">上游问题?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A3%81%E7%9B%98%E7%94%A8%E9%87%8F"><span class="nav-number">3.2.</span> <span class="nav-text">磁盘用量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E-PINE-H64-Model-B"><span class="nav-number">3.3.</span> <span class="nav-text">关于 PINE H64 Model B</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-overview">
+            <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Rongrong"
+      src="/images/avatar.svg">
+  <p class="site-author-name" itemprop="name">Rongrong</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/RongrongQAQ" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;RongrongQAQ" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://t.me/PlanetRong" title="Telegram Channel → https:&#x2F;&#x2F;t.me&#x2F;PlanetRong" rel="noopener" target="_blank"><i class="fab fa-telegram-plane fa-fw"></i></a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://github.com/Rongronggg9" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Rongronggg9" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://rongrongbq.moe/2021/07/How-to-solve-slowly-apt-search-on-Armbian/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.svg">
+      <meta itemprop="name" content="Rongrong">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="绒布地球">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          解决在 Armbian 中执行 apt search 非常慢的问题
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-07-05 03:15:32" itemprop="dateCreated datePublished" datetime="2021-07-05T03:15:32+08:00">2021-07-05</time>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>原本想购入一块 Raspberry Pi，奈何价格长期虚高，就在某天从女票票手里顺走了一块 <a target="_blank" rel="noopener" href="https://www.pine64.org/pine-h64-ver-b/">PINE H64 Model B</a>。往一张 TF 卡里灌入 Armbian 的镜像，就可以愉快地玩耍了。</p>
+<p>Armbian 衍生自 Debian。对于 Debian 系，当你需要管理软件包时，通常会使用 <code>apt</code> 来完成。而要搜索软件包，则有 <code>apt search</code> 和 <code>apt-cache search</code> 两种方式，它们的搜索范围、结果详细度、输出的可读性都不尽相同，且通常后者是更快的。</p>
+<p>自某个时候开始，在某些灌入 Armbian 的设备上，使用 <code>apt search</code> 搜索软件包变得无可容忍地慢，而 <code>apt-cache search</code> 却仍然保持着较高的速度。Armbian 论坛上的这个 <a target="_blank" rel="noopener" href="https://forum.armbian.com/topic/14064-my-apt-search-has-become-super-slow-recently/">topic</a> 讨论了这个问题。</p>
+<span id="more"></span>
+<p>总地来说，这个问题与 apt 对软件包列表（存放于 <code>/var/lib/apt/lists/</code> 中）的压缩有关，由于压缩被默认打开，且 lz4 压缩方式优先级较高，软件包列表被以 lz4 的方式压缩。在上述 topic 中，部分用户将压缩方式改为 gzip，解决了这个问题，因此 Armbian 已经合并了一个 <a target="_blank" rel="noopener" href="https://github.com/armbian/build/pull/2729">Pull Request</a>，提高了 gzip 的优先级，现在 Armbian 上的 apt 已经会默认使用 gzip 来压缩软件包列表。</p>
+<p>然而，将压缩方式改为 gzip 显然不能解决所有用户的问题，上述 topic 中仍旧有不少用户反馈这个问题没有得到解决。实际经过测试，改回默认的优先级（优先使用 lz4 压缩）也不能解决问题。因此，最根本的解决方法就是，关闭压缩。</p>
+<h1 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo <span class="built_in">echo</span> <span class="string">&#x27;Acquire::GzipIndexes &quot;false&quot;;&#x27;</span> | sudo tee /etc/apt/apt.conf.d/99disable-compression</span><br><span class="line">sudo rm /var/lib/apt/lists/*.gz  <span class="comment"># 如果你的压缩方式是 lz4，请对应更改</span></span><br><span class="line">sudo apt update</span><br></pre></td></tr></table></figure>
+
+<p>或者，你也可以只使用 <code>apt-cache search</code>，它总是相当快的。</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><h2 id="上游问题"><a href="#上游问题" class="headerlink" title="上游问题?"></a>上游问题?</h2><p>这似乎是一个上游问题。Armbian 在 <a target="_blank" rel="noopener" href="https://github.com/armbian/build/blob/fc07886a1d5e5013bc27b58cb30d5e3d218e5da9/packages/bsp/common/etc/apt/apt.conf.d/02-armbian-compress-indexes">2018 年 6 月</a>对 apt 增加了一条默认配置 <code>Acquire::GzipIndexes &quot;true&quot;;</code>，使得软件包列表的压缩被默认打开，但 <code>apt search</code> 慢的问题似乎要到 2020 年才出现。Debian 则默认没有配置压缩，因而掩盖了这个问题。<br>在 Debian GNU/Linux 10 (buster) on Windows 10 x86_64 上测试，得到了这样的结果：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">time apt search python</span><br><span class="line">time apt-cache search python</span><br><span class="line"></span><br><span class="line"><span class="comment"># 未配置压缩（Debian 默认配置：不被压缩）</span></span><br><span class="line"><span class="comment"># apt search python  1.10s user 0.38s system 80% cpu 1.840 total</span></span><br><span class="line"><span class="comment"># apt-cache search python  0.34s user 0.14s system 99% cpu 0.481 total</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 开启压缩（默认优先级：被 lz4 压缩）</span></span><br><span class="line"><span class="comment"># apt search python  67.92s user 6.86s system 99% cpu 1:15.20 total</span></span><br><span class="line"><span class="comment"># apt-cache search python  0.38s user 0.18s system 99% cpu 0.568 total</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 开启压缩（Armbian 优先级：被 gzip 压缩）</span></span><br><span class="line"><span class="comment"># apt search python  678.15s user 6.50s system 99% cpu 11:25.26 total</span></span><br><span class="line"><span class="comment"># apt-cache search python  0.47s user 0.10s system 98% cpu 0.575 total</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="磁盘用量"><a href="#磁盘用量" class="headerlink" title="磁盘用量"></a>磁盘用量</h2><p>不必担心关闭压缩后磁盘用量会大幅增长，事实上不会增加太多，磁盘空间并没有时间宝贵。关闭压缩后，Armbian 初始的软件源的软件包列表也仅仅占用 100M 左右的空间，确实不能明白默认开启压缩的用意。</p>
+<h2 id="关于-PINE-H64-Model-B"><a href="#关于-PINE-H64-Model-B" class="headerlink" title="关于 PINE H64 Model B"></a>关于 PINE H64 Model B</h2><p>可以在<a target="_blank" rel="noopener" href="https://www.armbian.com/pine-h64/">这里</a>下载适用于它的 Armbian 镜像。它的 TF 卡槽只有 HS 级别，并不支持 UHS。一张 4K 读写性能不太差的卡就能满足使用。<br><a target="_blank" rel="noopener" href="https://www.pine64.org/pine-h64-ver-b/">产品页</a>和 <a target="_blank" rel="noopener" href="https://wiki.pine64.org/wiki/PINE_H64">PINE64 wiki</a> 都写错了 WiFi 能力，它只能使用 2.4GHz 频段，不支持 11ac。<br>PINE H64 Model A 实际是一款流产的产品，由于它采用的 Allwinner(R) H6 SoC 在 PCIe 上的<a target="_blank" rel="noopener" href="https://linux-sunxi.org/H6#Errata">天坑</a>，它的 mPCIe 插槽不再有很大的意义，没有 mPCIe 插槽的 Model B 就是这么诞生的。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%AC%94%E8%AE%B0/" rel="tag"># 笔记</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/07/hello-world/" rel="prev" title="Hello World">
+                  <i class="fa fa-chevron-left"></i> Hello World
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Rongrong</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+  
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"Rongronggg9","repo":"Rongronggg9.github.io","client_id":"51c9209096f053d06f86","client_secret":"e4318148362993add7e5f8ee82b3d6dafdbabff5","admin_user":"Rongronggg9","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdn.jsdelivr.net/npm/gitalk@1.7.2/dist/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"8999e729ee105d48e605c256339fdc10"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>
